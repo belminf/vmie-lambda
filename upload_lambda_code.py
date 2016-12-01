@@ -10,8 +10,8 @@ parser.add_argument('bucket', metavar='S3_BUCKET', help='S3 bucket name for Lamb
 args = parser.parse_args()
 
 LAMBDA_DEPLOYMENT_FILES = (
-    'import_ova.py',
-    'check_import_status.py',
+    'lambda/import_ova.py',
+    'lambda/check_import_status.py',
 )
 
 S3_BUCKET_NAME = args.bucket
@@ -33,3 +33,7 @@ for filename in LAMBDA_DEPLOYMENT_FILES:
 
     # Put on S3
     s3.Bucket(S3_BUCKET_NAME).put_object(Key=zip_fn, Body=open(zip_fn))
+
+    print('Uploaded {} to {}...'.format(zip_fn, S3_BUCKET_NAME))
+
+print('Done.')
