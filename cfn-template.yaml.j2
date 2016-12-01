@@ -7,7 +7,7 @@ Description:
 
 Parameters:
  TopicEmail: 
-   Default: your.address@here.com
+   Default: {{ email }}
    Description: E-Mail address to subscribe to alerts
    Type: String
 
@@ -213,7 +213,7 @@ Resources:
     Handler: "import_ova.lambda_handler"
     Role: !GetAtt VMIELambdaRole.Arn
     Code:
-      S3Bucket: "als3-code"
+      S3Bucket: "{{ bucket }}"
       S3Key: "import_ova.zip"
     Description: "Lambda Function that automatically imports OVA that is put in a S3 bucket"
     Runtime: "python2.7"
@@ -225,7 +225,7 @@ Resources:
     Handler: "check_import_status.lambda_handler"
     Role: !GetAtt VMIELambdaRole.Arn
     Code:
-      S3Bucket: "als3-code"
+      S3Bucket: "{{ bucket }}"
       S3Key: "check_import_status.zip"
     Description: "Check VM Import status every 30 Minutes to report on completion"
     Runtime: "python2.7"
