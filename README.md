@@ -12,4 +12,6 @@ AWS credential via environment variables:
     $ export AWS_SECRET_ACCESS_KEY="ACCES_KEY_HERE"
 
 ## Files
+* `upload_lambda_code.py` - script to load Lambda code
 * `cfn-template.yaml` - CloudFormation template
+* `lambda/` - directory for Lambda function code
