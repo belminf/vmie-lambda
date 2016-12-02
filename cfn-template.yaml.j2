@@ -72,20 +72,20 @@ Resources:
           Key: "Name"
           Value: !Join ["-", [Ref: "AWS::StackName", "s3", Ref: "AWS::Region"]]
 
- VMIELambdaRole:
-  Type: "AWS::IAM::Role"
-  Properties:
-   AssumeRolePolicyDocument:
-     Version: '2012-10-17'
-     Statement:
-      - 
-       Effect: "Allow"
-       Principal:
-         Service:
-          - "lambda.amazonaws.com" 
-       Action:
-        - "sts:AssumeRole"
-   Path: "/"
+  VMIELambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+    AssumeRolePolicyDocument:
+      Version: '2012-10-17'
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+      Path: "/"
 
  VMIELambdaPol:
   Type: "AWS::IAM::Policy"
