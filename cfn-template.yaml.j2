@@ -232,19 +232,19 @@ Resources:
       Runtime: "python2.7"
       Timeout: "60"
 
- CheckImportRule:
-  Type: "AWS::Events::Rule"
-  Properties:
-    Name: "vmie_status_check"
-    ScheduleExpression: "cron(0/30 * * * ? *)"
-    State: "DISABLED"
-    Targets:
-      - 
-        Arn:
-          Fn::GetAtt:
-            - "CheckImport"
-            - "Arn"
-        Id: "vmie_status_check"
+  CheckImportRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: "vmie_status_check"
+      ScheduleExpression: "cron(0/30 * * * ? *)"
+      State: "DISABLED"
+      Targets:
+        -
+          Arn:
+            Fn::GetAtt:
+              - "CheckImport"
+              - "Arn"
+          Id: "vmie_status_check"
 
  PermissionForEventsToInvokeLambda: 
   Type: "AWS::Lambda::Permission"
