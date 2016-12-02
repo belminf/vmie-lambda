@@ -246,17 +246,17 @@ Resources:
               - "Arn"
           Id: "vmie_status_check"
 
- PermissionForEventsToInvokeLambda: 
-  Type: "AWS::Lambda::Permission"
-  Properties: 
-    FunctionName: 
-      Ref: "CheckImport"
-    Action: "lambda:InvokeFunction"
-    Principal: "events.amazonaws.com"
-    SourceArn: 
-      Fn::GetAtt: 
-        - "CheckImportRule"
-        - "Arn"
+  PermissionForEventsToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName:
+        Ref: "CheckImport"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "CheckImportRule"
+          - "Arn"
 
  PermissionForS3ToInvokeLambda:
   Type: "AWS::Lambda::Permission"
