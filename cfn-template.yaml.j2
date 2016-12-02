@@ -87,91 +87,90 @@ Resources:
             - "sts:AssumeRole"
       Path: "/"
 
- VMIELambdaPol:
-  Type: "AWS::IAM::Policy"
-  Properties:
-   PolicyName: "ImportExportPolicy"
-   PolicyDocument:
-    Version: "2012-10-17"
-    Statement:
-      -
-        Effect: "Allow"
-        Action:
-          - "s3:ListAllMyBuckets"
-        Resource: "*"
-      -
-        Effect: "Allow"
-        Action:
-          - "s3:CreateBucket"
-          - "s3:DeleteBucket"
-          - "s3:DeleteObject"
-          - "s3:GetBucketLocation"
-          - "s3:GetObject"
-          - "s3:ListBucket"
-          - "s3:AbortMultipartUpload"
-          - "s3:ListMultipartUpload"
-          - "s3:ListBucketMultipartUploads"
-          - "s3:PutObject"
-        Resource: 
-          - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
-          - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket", "/*"]]
-      -  
-        Effect: "Allow"
-        Action:
-          - "ec2:CancelConversionTask"
-          - "ec2:CancelExportTask"
-          - "ec2:CreateImage"
-          - "ec2:CreateInstanceExportTask"
-          - "ec2:CreateTags"
-          - "ec2:DeleteTags"
-          - "ec2:DescribeConversionTasks"
-          - "ec2:DescribeExportTasks"
-          - "ec2:DescribeInstanceAttribute"
-          - "ec2:DescribeInstanceStatus"
-          - "ec2:DescribeInstances"
-          - "ec2:DescribeTags"
-          - "ec2:ImportInstance"
-          - "ec2:ImportVolume"
-          - "ec2:StartInstances"
-          - "ec2:StopInstances"
-          - "ec2:TerminateInstances"
-          - "ec2:ImportImage"
-          - "ec2:ImportSnapshot"
-          - "ec2:DescribeImportImageTasks"
-          - "ec2:DescribeImportSnapshotTasks"
-          - "ec2:CancelImportTask"
-        Resource: "*"
-      - 
-        Effect: "Allow"
-        Action: 
-          - "dynamodb:DeleteItem"
-          - "dynamodb:Scan"
-          - "dynamodb:UpdateItem"
-          - "dynamodb:PutItem"
-          - "dynamodb:Query"
-          - "dynamodb:GetItem"
-        Resource: "*"
-      - 
-        Effect: "Allow"
-        Action:
-          - "events:DisableRule"
-          - "events:EnableRule"
-          - "events:DescribeRule"
-        Resource: "*"
-      - 
-        Effect: "Allow"
-        Action:
-          - "logs:*"
-        Resource: "arn:aws:logs:::*"
-      - 
-        Effect: "Allow"
-        Action:
-          - "sns:Publish"
-        Resource: "*"
-   
-   Roles:
-     - 
-       Ref: "VMIELambdaRole"
+  VMIELambdaPol:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "ImportExportPolicy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "s3:ListAllMyBuckets"
+            Resource: "*"
+          -
+            Effect: "Allow"
+            Action:
+              - "s3:CreateBucket"
+              - "s3:DeleteBucket"
+              - "s3:DeleteObject"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:AbortMultipartUpload"
+              - "s3:ListMultipartUpload"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
+            Resource:
+              - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
+              - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket", "/*"]]
+          -
+            Effect: "Allow"
+            Action:
+              - "ec2:CancelConversionTask"
+              - "ec2:CancelExportTask"
+              - "ec2:CreateImage"
+              - "ec2:CreateInstanceExportTask"
+              - "ec2:CreateTags"
+              - "ec2:DeleteTags"
+              - "ec2:DescribeConversionTasks"
+              - "ec2:DescribeExportTasks"
+              - "ec2:DescribeInstanceAttribute"
+              - "ec2:DescribeInstanceStatus"
+              - "ec2:DescribeInstances"
+              - "ec2:DescribeTags"
+              - "ec2:ImportInstance"
+              - "ec2:ImportVolume"
+              - "ec2:StartInstances"
+              - "ec2:StopInstances"
+              - "ec2:TerminateInstances"
+              - "ec2:ImportImage"
+              - "ec2:ImportSnapshot"
+              - "ec2:DescribeImportImageTasks"
+              - "ec2:DescribeImportSnapshotTasks"
+              - "ec2:CancelImportTask"
+            Resource: "*"
+          -
+            Effect: "Allow"
+            Action:
+              - "dynamodb:DeleteItem"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:Query"
+              - "dynamodb:GetItem"
+            Resource: "*"
+          -
+            Effect: "Allow"
+            Action:
+              - "events:DisableRule"
+              - "events:EnableRule"
+              - "events:DescribeRule"
+            Resource: "*"
+          -
+            Effect: "Allow"
+            Action:
+              - "logs:*"
+            Resource: "arn:aws:logs:::*"
+          -
+            Effect: "Allow"
+            Action:
+              - "sns:Publish"
+            Resource: "*"
+      Roles:
+        -
+          Ref: "VMIELambdaRole"
 
  VmieStatusTable:
   Type: "AWS::DynamoDB::Table"
