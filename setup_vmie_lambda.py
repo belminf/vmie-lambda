@@ -43,23 +43,59 @@ for filename in LAMBDA_DEPLOYMENT_FILES:
 # Load template
 template = Template(open('cfn-template.yaml.j2').read())
 
-# Render template
-cfn_template = template.render(
-    email=args.email,
-    bucket=args.bucket
-)
-
 # CloudFormation client
 client = boto3.client('cloudformation')
 
+# Render template
+cfn_template = template.render(
+    email=args.email,
+    bucket=args.bucket,
+    notification_stanza=''
+)
+
 # Create CloudFormation stack
-response = client.create_stack(
+print('Creating stack...')
+client.create_stack(
     StackName=args.stackname,
     TemplateBody=cfn_template,
     Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
 )
 
-# Print response
-print(response)
+#  Wait till stack is created
+waiter = client.get_waiter('stack_create_complete')
+waiter.wait(StackName=args.stackname)
+
+print('Updating stack with S3 notification...')
+
+# Update template
+notification_stanza = """
+      NotificationConfiguration:
+        LambdaConfigurations:
+          -
+            Event: "s3:ObjectCreated:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: "Suffix"
+                    Value: "ova"
+            Function: !GetAtt ImportOva.Arn
+"""
+cfn_template = template.render(
+    email=args.email,
+    bucket=args.bucket,
+    notification_stanza=notification_stanza
+)
+
+# Run stack update
+client.update_stack(
+    StackName=args.stackname,
+    TemplateBody=cfn_template,
+    Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
+)
+
+# Wait till stack is updated
+waiter = client.get_waiter('stack_update_complete')
+waiter.wait(StackName=args.stackname)
 
 print('Done.')

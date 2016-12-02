@@ -66,7 +66,7 @@ Resources:
   ImportExportS3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      AccessControl: "BucketOwnerFullControl"
+      AccessControl: "BucketOwnerFullControl"{{ notification_stanza }}
       Tags:
         -
           Key: "Name"
