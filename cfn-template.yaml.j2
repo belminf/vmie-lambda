@@ -63,14 +63,14 @@ Resources:
         -
           Ref: "VMImportRole"
 
- ImportExportS3Bucket:
-  Type: "AWS::S3::Bucket"
-  Properties:
-   AccessControl: "BucketOwnerFullControl"
-   Tags:
-    -
-      Key: "Name"
-      Value: !Join ["-", [Ref: "AWS::StackName", "s3", Ref: "AWS::Region"]]
+  ImportExportS3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+      Tags:
+        -
+          Key: "Name"
+          Value: !Join ["-", [Ref: "AWS::StackName", "s3", Ref: "AWS::Region"]]
 
  VMIELambdaRole:
   Type: "AWS::IAM::Role"
