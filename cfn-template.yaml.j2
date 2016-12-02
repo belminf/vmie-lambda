@@ -1,9 +1,7 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description:
- This is a Cloudformation that setups the permissions need for VM Import Export service. It also deploys a Lambda function that automates 
- the import process, once an OVA is placed the S3 bucket the template creates. It reports back when the task is completed.
+Description: Configures IAM and S3 to allow for VM imports of OVAs
 
 Parameters:
  TopicEmail: 
