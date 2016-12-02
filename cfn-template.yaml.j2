@@ -258,11 +258,11 @@ Resources:
           - "CheckImportRule"
           - "Arn"
 
- PermissionForS3ToInvokeLambda:
-  Type: "AWS::Lambda::Permission"
-  Properties: 
-    FunctionName: 
-      Ref: "ImportOva"
-    Action: "lambda:InvokeFunction"
-    Principal: "s3.amazonaws.com"
-    SourceArn: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
+  PermissionForS3ToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: 
+        Ref: "ImportOva"
+      Action: "lambda:InvokeFunction"
+      Principal: "s3.amazonaws.com"
+      SourceArn: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
