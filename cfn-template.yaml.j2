@@ -13,23 +13,24 @@ Parameters:
     Type: String
 
 Resources:
- VMImportRole:
-  Type: "AWS::IAM::Role"
-  Properties:
-   RoleName: "vmimport"
-   AssumeRolePolicyDocument:
-     Version: '2012-10-17'
-     Statement:
-     - Effect: Allow
-       Principal:
-         Service:
-         - vmie.amazonaws.com
-       Action:
-       - sts:AssumeRole
-       Condition:
-          StringEquals:
-              sts:ExternalId: "vmimport"
-   Path: "/"
+  VMImportRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "vmimport"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - vmie.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: "vmimport"
+        Path: "/"
 
  VMImportRolePol:
   Type: "AWS::IAM::Policy"
