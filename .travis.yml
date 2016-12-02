@@ -5,5 +5,5 @@ python:
 install:
   - pip install yamllint flake8
 script:
-  - flake8 .
+  - flake8 --ignore=E501 .
   - yamllint $(git ls-files *.yaml *.yaml.j2)
