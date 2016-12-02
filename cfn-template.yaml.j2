@@ -30,7 +30,7 @@ Resources:
             Condition:
               StringEquals:
                 sts:ExternalId: "vmimport"
-        Path: "/"
+      Path: "/"
 
   VMImportRolePol:
     Type: "AWS::IAM::Policy"
@@ -75,16 +75,16 @@ Resources:
   VMIELambdaRole:
     Type: "AWS::IAM::Role"
     Properties:
-    AssumeRolePolicyDocument:
-      Version: '2012-10-17'
-      Statement:
-        -
-          Effect: "Allow"
-          Principal:
-            Service:
-              - "lambda.amazonaws.com"
-          Action:
-            - "sts:AssumeRole"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
       Path: "/"
 
   VMIELambdaPol:
