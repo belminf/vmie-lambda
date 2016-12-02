@@ -188,25 +188,25 @@ Resources:
         WriteCapacityUnits: "5"
       TableName: vmie_status
 
- VmieStartSns:
-  Type: "AWS::SNS::Topic"
-  Properties:
-    DisplayName: "VMIE Start"
-    TopicName: "vmie_start"
-    Subscription:
-      - 
-        Endpoint: !Ref TopicEmail
-        Protocol: "email"
+  VmieStartSns:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: "VMIE Start"
+      TopicName: "vmie_start"
+      Subscription:
+        -
+          Endpoint: !Ref TopicEmail
+          Protocol: "email"
 
- VmieEndSns:
-  Type: "AWS::SNS::Topic"
-  Properties:
-    DisplayName: "VMIE Ended"
-    TopicName: "vmie_status"
-    Subscription:
-      - 
-        Endpoint: !Ref TopicEmail
-        Protocol: "email"
+  VmieEndSns:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: "VMIE Ended"
+      TopicName: "vmie_status"
+      Subscription:
+        -
+          Endpoint: !Ref TopicEmail
+          Protocol: "email"
 
  ImportOva:
   Type: "AWS::Lambda::Function"
