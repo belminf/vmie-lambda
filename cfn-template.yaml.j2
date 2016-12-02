@@ -260,8 +260,8 @@ Resources:
 
   PermissionForS3ToInvokeLambda:
     Type: "AWS::Lambda::Permission"
-    Properties: 
-      FunctionName: 
+    Properties:
+      FunctionName:
         Ref: "ImportOva"
       Action: "lambda:InvokeFunction"
       Principal: "s3.amazonaws.com"
