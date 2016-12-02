@@ -8,7 +8,7 @@ import boto3
 
 parser = argparse.ArgumentParser(description='Create an S3 bucket for automatic import of OVAs')
 parser.add_argument('stackname', metavar='STACK_NAME', help='CloudFormation stack name')
-parser.add_argument('bucket', metavar='S3_BUCKET', help='S3 bucket name for Lambda code')
+parser.add_argument('bucket', metavar='S3_BUCKET', help='S3 bucket for storing Lambda code')
 parser.add_argument('email', metavar='EMAIL', help='e-mail address for notificaitons')
 args = parser.parse_args()
 
