@@ -7,14 +7,18 @@ Description:
 
 Parameters:
  TopicEmail: 
-   Default: {{ email }}
+   Default: "{{ email }}"
    Description: E-Mail address to subscribe to alerts
+   Type: String
+ S3Bucket:
+   Default: "{{ bucket }}"
    Type: String
 
 Resources:
  VMImportRole:
   Type: "AWS::IAM::Role"
   Properties:
+   RoleName: "vmimport"
    AssumeRolePolicyDocument:
      Version: '2012-10-17'
      Statement:
@@ -55,7 +59,7 @@ Resources:
            - "ec2:ModifySnapshotAttribute"
            - "ec2:CopySnapshot"
            - "ec2:RegisterImage"
-           - "ec2:Describe"
+           - "ec2:Describe*"
          Resource: "*"
    Roles: 
      -
@@ -64,17 +68,6 @@ Resources:
  ImportExportS3Bucket:
   Type: "AWS::S3::Bucket"
   Properties:
-   NotificationConfiguration:
-     LambdaConfigurations:
-       - 
-         Event: "s3:ObjectCreated:*"
-         Filter:
-           S3Key: 
-             Rules: 
-               -
-                 Name: "Suffix"
-                 Value: "ova"
-         Function: !GetAtt ImportOva.Arn
    AccessControl: "BucketOwnerFullControl"
    Tags:
     -
@@ -167,6 +160,17 @@ Resources:
           - "events:EnableRule"
           - "events:DescribeRule"
         Resource: "*"
+      - 
+        Effect: "Allow"
+        Action:
+          - "logs:*"
+        Resource: "arn:aws:logs:::*"
+      - 
+        Effect: "Allow"
+        Action:
+          - "sns:Publish"
+        Resource: "*"
+   
    Roles:
      - 
        Ref: "VMIELambdaRole"
@@ -213,7 +217,7 @@ Resources:
     Handler: "import_ova.lambda_handler"
     Role: !GetAtt VMIELambdaRole.Arn
     Code:
-      S3Bucket: "{{ bucket }}"
+      S3Bucket: !Ref S3Bucket
       S3Key: "import_ova.zip"
     Description: "Lambda Function that automatically imports OVA that is put in a S3 bucket"
     Runtime: "python2.7"
@@ -225,7 +229,7 @@ Resources:
     Handler: "check_import_status.lambda_handler"
     Role: !GetAtt VMIELambdaRole.Arn
     Code:
-      S3Bucket: "{{ bucket }}"
+      S3Bucket: !Ref S3Bucket
       S3Key: "check_import_status.zip"
     Description: "Check VM Import status every 30 Minutes to report on completion"
     Runtime: "python2.7"
@@ -234,6 +238,7 @@ Resources:
  CheckImportRule:
   Type: "AWS::Events::Rule"
   Properties:
+    Name: "vmie_status_check"
     ScheduleExpression: "cron(0/30 * * * ? *)"
     State: "DISABLED"
     Targets:
