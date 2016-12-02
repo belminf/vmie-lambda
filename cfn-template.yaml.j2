@@ -4,13 +4,13 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Configures IAM and S3 to allow for VM imports of OVAs
 
 Parameters:
- TopicEmail: 
-   Default: "{{ email }}"
-   Description: E-Mail address to subscribe to alerts
-   Type: String
- S3Bucket:
-   Default: "{{ bucket }}"
-   Type: String
+  TopicEmail:
+    Default: "{{ email }}"
+    Description: E-Mail address to subscribe to alerts
+    Type: String
+  S3Bucket:
+    Default: "{{ bucket }}"
+    Type: String
 
 Resources:
  VMImportRole:
