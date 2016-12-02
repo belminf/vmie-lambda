@@ -172,21 +172,21 @@ Resources:
         -
           Ref: "VMIELambdaRole"
 
- VmieStatusTable:
-  Type: "AWS::DynamoDB::Table"
-  Properties:
-   AttributeDefinitions:
-     -
-       AttributeName: "ImportTaskId"
-       AttributeType: "S"
-   KeySchema:
-     -
-       AttributeName: "ImportTaskId"
-       KeyType: "HASH"
-   ProvisionedThroughput:
-     ReadCapacityUnits: "5"
-     WriteCapacityUnits: "5"
-   TableName: vmie_status
+  VmieStatusTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "ImportTaskId"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "ImportTaskId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: vmie_status
 
  VmieStartSns:
   Type: "AWS::SNS::Topic"
