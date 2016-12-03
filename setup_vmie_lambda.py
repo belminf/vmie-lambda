@@ -27,7 +27,7 @@ client = boto3.client('cloudformation')
 # Render template
 cfn_template = template.render(
     email=args.email,
-    notification_stanza=''
+    stack_update=False
 )
 
 # Create CloudFormation stack
@@ -38,45 +38,13 @@ client.create_stack(
     Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
 )
 
-#  Wait till stack is created
+# Wait till stack is created
 waiter = client.get_waiter('stack_create_complete')
-waiter.wait(StackName=args.stackname)
-
-print('Updating stack with S3 notification...')
-
-# Update template
-notification_stanza = """
-      NotificationConfiguration:
-        LambdaConfigurations:
-          -
-            Event: "s3:ObjectCreated:*"
-            Filter:
-              S3Key:
-                Rules:
-                  -
-                    Name: "Suffix"
-                    Value: "ova"
-            Function: !GetAtt ImportOva.Arn
-"""
-cfn_template = template.render(
-    email=args.email,
-    notification_stanza=notification_stanza
-)
-
-# Run stack update
-client.update_stack(
-    StackName=args.stackname,
-    TemplateBody=cfn_template,
-    Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
-)
-
-# Wait till stack is updated
-waiter = client.get_waiter('stack_update_complete')
 waiter.wait(StackName=args.stackname)
 
 # Get CFn generated bucket name
 cf_resources = boto3.resource('cloudformation')
-bucket_resource = cf_resources.StackResource(args.stackname, 'ImportExportS3Bucket')
+bucket_resource = cf_resources.StackResource(args.stackname, 'VMIELambdaS3Bucket')
 bucket_name = bucket_resource.physical_resource_id
 
 # Create temporary directory
@@ -94,18 +62,59 @@ try:
         zip_fn = '{}.zip'.format(base_fn)
         zip_path = path_join(tmpdir_path, zip_fn)
 
+        print('Compressing {}...'.format(zip_fn))
+
         # Create zip file and add the python code
         with ZipFile(zip_path, 'w') as zip_file:
             zip_file.write(filename)
 
+        print('Uploading {} to S3...'.format(zip_fn))
+
         # Put on S3
         s3.Bucket(bucket_name).put_object(Key=zip_fn, Body=open(zip_path))
-
-        print('Uploaded {} to {}...'.format(zip_fn, bucket_name))
 
 finally:
 
     # Cleanup by deleting temporary directory
     rmtree(tmpdir_path)
+
+print('Adding Lambda code to stack...')
+
+# Add lambda functions to template
+cfn_template = template.render(
+    email=args.email,
+    lambda_code=True
+)
+
+# Run stack update
+client.update_stack(
+    StackName=args.stackname,
+    TemplateBody=cfn_template,
+    Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
+)
+
+# Wait till stack is updated
+waiter = client.get_waiter('stack_update_complete')
+waiter.wait(StackName=args.stackname)
+
+print('Adding S3 notification to stack...')
+
+# Add lambda functions to template
+cfn_template = template.render(
+    email=args.email,
+    lambda_code=True,
+    s3_notification=True
+)
+
+# Run stack update
+client.update_stack(
+    StackName=args.stackname,
+    TemplateBody=cfn_template,
+    Capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_IAM'),
+)
+
+# Wait till stack is updated
+waiter = client.get_waiter('stack_update_complete')
+waiter.wait(StackName=args.stackname)
 
 print('Done.')

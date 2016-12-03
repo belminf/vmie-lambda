@@ -60,10 +60,33 @@ Resources:
         -
           Ref: "VMImportRole"
 
+  VMIELambdaS3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+      Tags:
+        -
+          Key: "Name"
+          # yamllint disable-line rule:line-length
+          Value: !Join ["-", [Ref: "AWS::StackName", "lambda", Ref: "AWS::Region"]]
+
   ImportExportS3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      AccessControl: "BucketOwnerFullControl"{{ notification_stanza }}
+      AccessControl: "BucketOwnerFullControl"
+      # jinja2 conditional {% if s3_notification %}
+      NotificationConfiguration:
+        LambdaConfigurations:
+          -
+            Event: "s3:ObjectCreated:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: "Suffix"
+                    Value: "ova"
+            Function: !GetAtt ImportOva.Arn
+      # jinja2 conditional {% endif %}
       Tags:
         -
           Key: "Name"
@@ -205,13 +228,14 @@ Resources:
           Endpoint: !Ref TopicEmail
           Protocol: "email"
 
+  # jinja2 conditional {% if lambda_code %}
   ImportOva:
     Type: "AWS::Lambda::Function"
     Properties:
       Handler: "import_ova.lambda_handler"
       Role: !GetAtt VMIELambdaRole.Arn
       Code:
-        S3Bucket: !Ref ImportExportS3Bucket
+        S3Bucket: !Ref VMIELambdaS3Bucket
         S3Key: "import_ova.zip"
       Description: "Imports OVAs uploaded to an S3 bucket"
       Runtime: "python2.7"
@@ -223,11 +247,12 @@ Resources:
       Handler: "check_import_status.lambda_handler"
       Role: !GetAtt VMIELambdaRole.Arn
       Code:
-        S3Bucket: !Ref ImportExportS3Bucket
+        S3Bucket: !Ref VMIELambdaS3Bucket
         S3Key: "check_import_status.zip"
       Description: "Checks VM Import status"
       Runtime: "python2.7"
       Timeout: "60"
+  # jinja2 conditional {% endif %}
 
   CheckImportRule:
     Type: "AWS::Events::Rule"
@@ -235,6 +260,7 @@ Resources:
       Name: "vmie_status_check"
       ScheduleExpression: "cron(0/30 * * * ? *)"
       State: "DISABLED"
+      # jinja2 conditional {% if lambda_code %}
       Targets:
         -
           Arn:
@@ -242,7 +268,9 @@ Resources:
               - "CheckImport"
               - "Arn"
           Id: "vmie_status_check"
+          # jinja2 conditional {% endif %}
 
+  # jinja2 conditional {% if lambda_code %}
   PermissionForEventsToInvokeLambda:
     Type: "AWS::Lambda::Permission"
     Properties:
@@ -263,3 +291,4 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "s3.amazonaws.com"
       SourceArn: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
+      # jinja2 conditional {% endif %}
