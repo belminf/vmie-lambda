@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.7
 
-from os.path import basename, splitext
+from os.path import basename, splitext, join as path_join
+from shutil import rmtree
+from tempfile import mkdtemp
 from zipfile import ZipFile
 from jinja2 import Template
 import argparse
@@ -13,8 +15,8 @@ parser.add_argument('email', metavar='EMAIL', help='e-mail address for notificai
 args = parser.parse_args()
 
 LAMBDA_DEPLOYMENT_FILES = (
-    'lambda/import_ova.py',
-    'lambda/check_import_status.py',
+    'lambda-code/import_ova.py',
+    'lambda-code/check_import_status.py',
 )
 
 S3_BUCKET_NAME = args.bucket
@@ -23,22 +25,31 @@ S3_BUCKET_NAME = args.bucket
 s3 = boto3.resource('s3')
 s3.create_bucket(Bucket=args.bucket)
 
+# Create temporary directory
+tmpdir_path = mkdtemp(prefix='vmie-')
+
 # Update zip files
-for filename in LAMBDA_DEPLOYMENT_FILES:
+try:
+    for filename in LAMBDA_DEPLOYMENT_FILES:
 
-    # Filename used to name the zip file
-    base_fn = splitext(basename(filename))[0]
-    zip_fn = '{}.zip'.format(base_fn)
+        # Filename used to name the zip file
+        base_fn = splitext(basename(filename))[0]
+        zip_fn = '{}.zip'.format(base_fn)
+        zip_path = path_join(tmpdir_path, zip_fn)
 
-    # Create zip file and add the python code
-    with ZipFile(zip_fn, 'w') as zip_file:
-        zip_file.write(filename)
+        # Create zip file and add the python code
+        with ZipFile(zip_path, 'w') as zip_file:
+            zip_file.write(filename)
 
-    # Put on S3
-    s3.Bucket(S3_BUCKET_NAME).put_object(Key=zip_fn, Body=open(zip_fn))
+        # Put on S3
+        s3.Bucket(S3_BUCKET_NAME).put_object(Key=zip_fn, Body=open(zip_path))
 
-    print('Uploaded {} to {}...'.format(zip_fn, S3_BUCKET_NAME))
+        print('Uploaded {} to {}...'.format(zip_fn, S3_BUCKET_NAME))
 
+finally:
+
+    # Cleanup by deleting temporary directory
+    rmtree(tmpdir_path)
 
 # Load template
 template = Template(open('cfn-template.yaml.j2').read())
