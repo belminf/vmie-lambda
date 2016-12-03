@@ -10,7 +10,6 @@ import boto3
 
 parser = argparse.ArgumentParser(description='Create an S3 bucket for automatic import of OVAs')
 parser.add_argument('stackname', metavar='STACK_NAME', help='CloudFormation stack name')
-parser.add_argument('bucket', metavar='S3_BUCKET', help='S3 bucket for storing Lambda code')
 parser.add_argument('email', metavar='EMAIL', help='e-mail address for notificaitons')
 args = parser.parse_args()
 
@@ -18,38 +17,6 @@ LAMBDA_DEPLOYMENT_FILES = (
     'lambda-code/import_ova.py',
     'lambda-code/check_import_status.py',
 )
-
-S3_BUCKET_NAME = args.bucket
-
-# Load S3 and create bucket
-s3 = boto3.resource('s3')
-s3.create_bucket(Bucket=args.bucket)
-
-# Create temporary directory
-tmpdir_path = mkdtemp(prefix='vmie-')
-
-# Update zip files
-try:
-    for filename in LAMBDA_DEPLOYMENT_FILES:
-
-        # Filename used to name the zip file
-        base_fn = splitext(basename(filename))[0]
-        zip_fn = '{}.zip'.format(base_fn)
-        zip_path = path_join(tmpdir_path, zip_fn)
-
-        # Create zip file and add the python code
-        with ZipFile(zip_path, 'w') as zip_file:
-            zip_file.write(filename)
-
-        # Put on S3
-        s3.Bucket(S3_BUCKET_NAME).put_object(Key=zip_fn, Body=open(zip_path))
-
-        print('Uploaded {} to {}...'.format(zip_fn, S3_BUCKET_NAME))
-
-finally:
-
-    # Cleanup by deleting temporary directory
-    rmtree(tmpdir_path)
 
 # Load template
 template = Template(open('cfn-template.yaml.j2').read())
@@ -60,7 +27,6 @@ client = boto3.client('cloudformation')
 # Render template
 cfn_template = template.render(
     email=args.email,
-    bucket=args.bucket,
     notification_stanza=''
 )
 
@@ -94,7 +60,6 @@ notification_stanza = """
 """
 cfn_template = template.render(
     email=args.email,
-    bucket=args.bucket,
     notification_stanza=notification_stanza
 )
 
@@ -108,5 +73,39 @@ client.update_stack(
 # Wait till stack is updated
 waiter = client.get_waiter('stack_update_complete')
 waiter.wait(StackName=args.stackname)
+
+# Get CFn generated bucket name
+cf_resources = boto3.resource('cloudformation')
+bucket_resource = cf_resources.StackResource(args.stackname, 'ImportExportS3Bucket')
+bucket_name = bucket_resource.physical_resource_id
+
+# Create temporary directory
+tmpdir_path = mkdtemp(prefix='vmie-')
+
+# S3 resource client
+s3 = boto3.resource('s3')
+
+# Update zip files
+try:
+    for filename in LAMBDA_DEPLOYMENT_FILES:
+
+        # Filename used to name the zip file
+        base_fn = splitext(basename(filename))[0]
+        zip_fn = '{}.zip'.format(base_fn)
+        zip_path = path_join(tmpdir_path, zip_fn)
+
+        # Create zip file and add the python code
+        with ZipFile(zip_path, 'w') as zip_file:
+            zip_file.write(filename)
+
+        # Put on S3
+        s3.Bucket(bucket_name).put_object(Key=zip_fn, Body=open(zip_path))
+
+        print('Uploaded {} to {}...'.format(zip_fn, bucket_name))
+
+finally:
+
+    # Cleanup by deleting temporary directory
+    rmtree(tmpdir_path)
 
 print('Done.')

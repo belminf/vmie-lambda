@@ -8,9 +8,6 @@ Parameters:
     Default: "{{ email }}"
     Description: E-Mail address to subscribe to alerts
     Type: String
-  S3Bucket:
-    Default: "{{ bucket }}"
-    Type: String
 
 Resources:
   VMImportRole:
@@ -214,7 +211,7 @@ Resources:
       Handler: "import_ova.lambda_handler"
       Role: !GetAtt VMIELambdaRole.Arn
       Code:
-        S3Bucket: !Ref S3Bucket
+        S3Bucket: !Ref ImportExportS3Bucket
         S3Key: "import_ova.zip"
       Description: "Imports OVAs uploaded to an S3 bucket"
       Runtime: "python2.7"
@@ -226,7 +223,7 @@ Resources:
       Handler: "check_import_status.lambda_handler"
       Role: !GetAtt VMIELambdaRole.Arn
       Code:
-        S3Bucket: !Ref S3Bucket
+        S3Bucket: !Ref ImportExportS3Bucket
         S3Key: "check_import_status.zip"
       Description: "Checks VM Import status"
       Runtime: "python2.7"
