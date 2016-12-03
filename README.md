@@ -1,5 +1,5 @@
 # vmie-lambda [![Build Status](https://travis-ci.org/belminf/vmie-lambda.svg?branch=master)](https://travis-ci.org/belminf/vmie-lambda)
-This is a AWS Lambda function that works off of a S3 Create Object Event that will import a OVA file to an AMI. This is a simple Lambda function that will take the ova file and import it to a AMI using the VM Import\Export Service. The accompanying script will continually check that status of the import jobs until they have finished and report back status.
+Leverages [boto3](https://boto3.readthedocs.io/en/latest/) and [CloudFormation](https://aws.amazon.com/cloudformation/) to create resources necessary to watch an S3 bucket to convert an OVA to an AMI. A Python Lambda script is triggered when a new OVA file is uploaded to the S3 bucket. Another Lambda Python script is used for reporting back status.
 
 ## Requirements
 Python requirements:
@@ -12,6 +12,6 @@ AWS credential via environment variables:
     $ export AWS_SECRET_ACCESS_KEY="ACCES_KEY_HERE"
 
 ## Files
-* `upload_lambda_code.py` - script to load Lambda code
-* `cfn-template.yaml` - CloudFormation template
-* `lambda/` - directory for Lambda function code
+* `setup_vmie_lambda.py` - sets up necessary AWS resources
+* `cfn-template.yaml.j2` - CloudFormation template using Jinja2
+* `lambda-code/` - directory for Lambda function code

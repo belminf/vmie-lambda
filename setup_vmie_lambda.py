@@ -8,7 +8,7 @@ from jinja2 import Template
 import argparse
 import boto3
 
-parser = argparse.ArgumentParser(description='Create an S3 bucket for automatic import of OVAs')
+parser = argparse.ArgumentParser(description='Sets up a CloudFormation stack to convert OVAs to AMIs')
 parser.add_argument('stackname', metavar='STACK_NAME', help='CloudFormation stack name')
 parser.add_argument('email', metavar='EMAIL', help='e-mail address for notificaitons')
 args = parser.parse_args()
