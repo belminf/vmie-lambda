@@ -44,7 +44,7 @@ waiter.wait(StackName=args.stackname)
 
 # Get CFn generated bucket name
 cf_resources = boto3.resource('cloudformation')
-bucket_resource = cf_resources.StackResource(args.stackname, 'VMIELambdaS3Bucket')
+bucket_resource = cf_resources.StackResource(args.stackname, 'S3BucketLambda')
 bucket_name = bucket_resource.physical_resource_id
 
 # Create temporary directory

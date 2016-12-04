@@ -1,19 +1,18 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Configures IAM and S3 to allow for VM imports of OVAs
+Description: Configures AWS resources for creating AMIs from OVAs
 
 Parameters:
   TopicEmail:
     Default: "{{ email }}"
-    Description: E-Mail address to subscribe to alerts
+    Description: E-mail address to subscribe to alerts
     Type: String
 
 Resources:
-  VMImportRole:
+  IAMRoleVMIE:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: "vmimport"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -29,10 +28,10 @@ Resources:
                 sts:ExternalId: "vmimport"
       Path: "/"
 
-  VMImportRolePol:
+  IAMPolicyVMIE:
     Type: "AWS::IAM::Policy"
     Properties:
-      PolicyName: "vmimport-role-pol"
+      PolicyName: !Join ["", [Ref: "AWS::StackName", "vmimport-vmie-pol"]]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -41,13 +40,13 @@ Resources:
             Action:
               - "s3:ListBucket"
               - "s3:GetBucketLocation"
-            Resource: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
+            Resource: !Join ["", ["arn:aws:s3:::", Ref: "S3BucketVMIE"]]
           -
             Effect: "Allow"
             Action:
               - "s3:GetObject"
             # yamllint disable-line rule:line-length
-            Resource: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket", "/*"]]
+            Resource: !Join ["", ["arn:aws:s3:::", Ref: "S3BucketVMIE", "/*"]]
           -
             Effect: "Allow"
             Action:
@@ -58,41 +57,9 @@ Resources:
             Resource: "*"
       Roles:
         -
-          Ref: "VMImportRole"
+          Ref: "IAMRoleVMIE"
 
-  VMIELambdaS3Bucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      AccessControl: "BucketOwnerFullControl"
-      Tags:
-        -
-          Key: "Name"
-          # yamllint disable-line rule:line-length
-          Value: !Join ["-", [Ref: "AWS::StackName", "lambda", Ref: "AWS::Region"]]
-
-  ImportExportS3Bucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      AccessControl: "BucketOwnerFullControl"
-      # jinja2 conditional {% if s3_notification %}
-      NotificationConfiguration:
-        LambdaConfigurations:
-          -
-            Event: "s3:ObjectCreated:*"
-            Filter:
-              S3Key:
-                Rules:
-                  -
-                    Name: "Suffix"
-                    Value: "ova"
-            Function: !GetAtt ImportOva.Arn
-      # jinja2 conditional {% endif %}
-      Tags:
-        -
-          Key: "Name"
-          Value: !Join ["-", [Ref: "AWS::StackName", "s3", Ref: "AWS::Region"]]
-
-  VMIELambdaRole:
+  IAMRoleLambda:
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -106,11 +73,10 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Path: "/"
-
-  VMIELambdaPol:
+  IAMPolicyLambda:
     Type: "AWS::IAM::Policy"
     Properties:
-      PolicyName: "ImportExportPolicy"
+      PolicyName: !Join ["-", [Ref: "AWS::StackName", "vmimport-lambda-pol"]]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -133,8 +99,8 @@ Resources:
               - "s3:ListBucketMultipartUploads"
               - "s3:PutObject"
             Resource:
-              - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
-              - !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket", "/*"]]
+              - !Join ["", ["arn:aws:s3:::", Ref: "S3BucketVMIE"]]
+              - !Join ["", ["arn:aws:s3:::", Ref: "S3BucketVMIE", "/*"]]
           -
             Effect: "Allow"
             Action:
@@ -190,9 +156,32 @@ Resources:
             Resource: "*"
       Roles:
         -
-          Ref: "VMIELambdaRole"
+          Ref: "IAMRoleLambda"
 
-  VmieStatusTable:
+  S3BucketLambda:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+
+  S3BucketVMIE:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+      # jinja2 conditional {% if s3_notification %}
+      NotificationConfiguration:
+        LambdaConfigurations:
+          -
+            Event: "s3:ObjectCreated:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: "Suffix"
+                    Value: "ova"
+            Function: !GetAtt LambdaImportOVA.Arn
+            # jinja2 conditional {% endif %}
+
+  TableVMIEStatus:
     Type: "AWS::DynamoDB::Table"
     Properties:
       AttributeDefinitions:
@@ -208,7 +197,7 @@ Resources:
         WriteCapacityUnits: "5"
       TableName: vmie_status
 
-  VmieStartSns:
+  SNSTopicVMIEStart:
     Type: "AWS::SNS::Topic"
     Properties:
       DisplayName: "VMIE Start"
@@ -218,7 +207,7 @@ Resources:
           Endpoint: !Ref TopicEmail
           Protocol: "email"
 
-  VmieEndSns:
+  SNSTopicVMIEEnd:
     Type: "AWS::SNS::Topic"
     Properties:
       DisplayName: "VMIE Ended"
@@ -229,35 +218,34 @@ Resources:
           Protocol: "email"
 
   # jinja2 conditional {% if lambda_code %}
-  ImportOva:
+  LambdaImportOVA:
     Type: "AWS::Lambda::Function"
     Properties:
       Handler: "import_ova.lambda_handler"
-      Role: !GetAtt VMIELambdaRole.Arn
+      Role: !GetAtt IAMRoleLambda.Arn
       Code:
-        S3Bucket: !Ref VMIELambdaS3Bucket
+        S3Bucket: !Ref S3BucketLambda
         S3Key: "import_ova.zip"
       Description: "Imports OVAs uploaded to an S3 bucket"
       Runtime: "python2.7"
       Timeout: "60"
 
-  CheckImport:
+  LambdaCheckImport:
     Type: "AWS::Lambda::Function"
     Properties:
       Handler: "check_import_status.lambda_handler"
-      Role: !GetAtt VMIELambdaRole.Arn
+      Role: !GetAtt IAMRoleLambda.Arn
       Code:
-        S3Bucket: !Ref VMIELambdaS3Bucket
+        S3Bucket: !Ref S3BucketLambda
         S3Key: "check_import_status.zip"
       Description: "Checks VM Import status"
       Runtime: "python2.7"
       Timeout: "60"
   # jinja2 conditional {% endif %}
 
-  CheckImportRule:
+  ScheduleCheckImport:
     Type: "AWS::Events::Rule"
     Properties:
-      Name: "vmie_status_check"
       ScheduleExpression: "cron(0/30 * * * ? *)"
       State: "DISABLED"
       # jinja2 conditional {% if lambda_code %}
@@ -265,30 +253,30 @@ Resources:
         -
           Arn:
             Fn::GetAtt:
-              - "CheckImport"
+              - "LambdaCheckImport"
               - "Arn"
           Id: "vmie_status_check"
           # jinja2 conditional {% endif %}
 
   # jinja2 conditional {% if lambda_code %}
-  PermissionForEventsToInvokeLambda:
+  LambdaPermissionEvents:
     Type: "AWS::Lambda::Permission"
     Properties:
       FunctionName:
-        Ref: "CheckImport"
+        Ref: "LambdaCheckImport"
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn:
         Fn::GetAtt:
-          - "CheckImportRule"
+          - "ScheduleCheckImport"
           - "Arn"
 
-  PermissionForS3ToInvokeLambda:
+  LambdaPermissionS3:
     Type: "AWS::Lambda::Permission"
     Properties:
       FunctionName:
-        Ref: "ImportOva"
+        Ref: "LambdaImportOVA"
       Action: "lambda:InvokeFunction"
       Principal: "s3.amazonaws.com"
-      SourceArn: !Join ["", ["arn:aws:s3:::", Ref: "ImportExportS3Bucket"]]
+      SourceArn: !Join ["", ["arn:aws:s3:::", Ref: "S3BucketVMIE"]]
       # jinja2 conditional {% endif %}
