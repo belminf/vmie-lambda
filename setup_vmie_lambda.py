@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-from os.path import basename, splitext, join as path_join
+from os.path import join as path_join
 from shutil import rmtree
 from tempfile import mkdtemp
 from zipfile import ZipFile
