@@ -196,19 +196,10 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
 
-  SNSTopicVMIEStart:
+  SNSTopicVMIE:
     Type: "AWS::SNS::Topic"
     Properties:
-      DisplayName: "VMIE Start"
-      Subscription:
-        -
-          Endpoint: !Ref TopicEmail
-          Protocol: "email"
-
-  SNSTopicVMIEEnd:
-    Type: "AWS::SNS::Topic"
-    Properties:
-      DisplayName: "VMIE Ended"
+      DisplayName: "VMIE notifications"
       Subscription:
         -
           Endpoint: !Ref TopicEmail
@@ -227,8 +218,8 @@ Resources:
         Variables:
           DYNAMO_TABLE: !Ref TableVMIEStatus
           SCHEDULE_RULE: !Ref ScheduleCheckImport
-          SNS_TOPIC_START: !Ref SNSTopicVMIEStart
-          SNS_TOPIC_END: !Ref SNSTopicVMIEEnd
+          SNS_TOPIC: !Ref SNSTopicVMIE
+          VMIE_IAM_ROLE: !Ref IAMRoleVMIE
       Description: "Imports OVAs uploaded to an S3 bucket"
       Runtime: "python2.7"
       Timeout: "60"
@@ -240,8 +231,14 @@ Resources:
       Role: !GetAtt IAMRoleLambda.Arn
       Code:
         S3Bucket: !Ref S3BucketLambda
-        S3Key: "check_import_status.zip"
-      Description: "Checks VM Import status"
+        S3Key: "lambda_code.zip"
+      Environment:
+        Variables:
+          DYNAMO_TABLE: !Ref TableVMIEStatus
+          SCHEDULE_RULE: !Ref ScheduleCheckImport
+          SNS_TOPIC: !Ref SNSTopicVMIE
+          VMIE_IAM_ROLE: !Ref IAMRoleVMIE
+       Description: "Checks VM Import status"
       Runtime: "python2.7"
       Timeout: "60"
   # jinja2 conditional {% endif %}
