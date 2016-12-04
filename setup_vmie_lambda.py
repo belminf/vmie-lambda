@@ -42,6 +42,8 @@ client.create_stack(
 waiter = client.get_waiter('stack_create_complete')
 waiter.wait(StackName=args.stackname)
 
+print('Uploading Lambda code to S3...')
+
 # Get CFn generated bucket name
 cf_resources = boto3.resource('cloudformation')
 bucket_resource = cf_resources.StackResource(args.stackname, 'S3BucketLambda')
