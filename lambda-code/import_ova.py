@@ -1,4 +1,5 @@
 import boto3
+import os
 
 
 def lambda_handler(event, context):
@@ -7,11 +8,6 @@ def lambda_handler(event, context):
     ddb = boto3.client('dynamodb')
     sns = boto3.client('sns')
     events = boto3.client('events')
-    sts = boto3.client('sts')
-
-    # Grabbing Account ID and Region
-    account_id = sts.get_caller_identity()["Account"]
-    region = event[u'Records'][0][u'awsRegion']
 
     # Grabbing S3 Bucket and S3 Object Key from S3 Event Object
     s3_object = event[u'Records'][0][u's3'][u'object'][u'key']
@@ -41,7 +37,7 @@ def lambda_handler(event, context):
 
     # Publishing Intiated Task Notification to SNS Topic
     sns.publish(
-        TopicArn='arn:aws:sns:{}:{}:vmie_start'.format(region, account_id),
+        TopicArn=os.environ('SNS_TOPIC_START'),
         Message='''A VM import task with the Task ID of {} has been started in your Account.\n
 This task is importing the following VM: {}.\n When the job has ended you will be notified of status.'''.format(task_id, s3_object),
         Subject=task_id,
@@ -50,7 +46,7 @@ This task is importing the following VM: {}.\n When the job has ended you will b
 
     # Post Status to DDB Table for tracking purposes
     ddb.put_item(
-        TableName='vmie_status',
+        TableName=os.environ('DYNAMO_TABLE'),
         Item={
             'ImportTaskId': {'S': task_id},
             'JobStatus': {'S': status},
@@ -62,12 +58,12 @@ This task is importing the following VM: {}.\n When the job has ended you will b
 
     # Enabling CloudWatch Event rule for Status Check
     rule_status = events.describe_rule(
-        Name='vmie_status_check'
+        Name=os.environ('SCHEDULE_RULE')
     )
 
     if rule_status[u'State'] == 'DISABLED':
         events.enable_rule(
-            Name='vmie_status_check',
+            Name=os.environ('SCHEDULE_RULE')
         )
         print 'Enabled Check Rule'
     else:

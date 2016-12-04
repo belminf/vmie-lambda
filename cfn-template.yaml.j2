@@ -195,13 +195,11 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: vmie_status
 
   SNSTopicVMIEStart:
     Type: "AWS::SNS::Topic"
     Properties:
       DisplayName: "VMIE Start"
-      TopicName: "vmie_start"
       Subscription:
         -
           Endpoint: !Ref TopicEmail
@@ -211,7 +209,6 @@ Resources:
     Type: "AWS::SNS::Topic"
     Properties:
       DisplayName: "VMIE Ended"
-      TopicName: "vmie_status"
       Subscription:
         -
           Endpoint: !Ref TopicEmail
@@ -226,6 +223,12 @@ Resources:
       Code:
         S3Bucket: !Ref S3BucketLambda
         S3Key: "import_ova.zip"
+      Environment:
+        Variables:
+          DYNAMO_TABLE: !Ref TableVMIEStatus
+          SCHEDULE_RULE: !Ref ScheduleCheckImport
+          SNS_TOPIC_START: !Ref SNSTopicVMIEStart
+          SNS_TOPIC_END: !Ref SNSTopicVMIEEnd
       Description: "Imports OVAs uploaded to an S3 bucket"
       Runtime: "python2.7"
       Timeout: "60"

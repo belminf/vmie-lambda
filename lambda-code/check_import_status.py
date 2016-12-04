@@ -1,5 +1,6 @@
 import boto3
 import time
+import os
 
 # Globally Defined Items
 ec2 = boto3.client('ec2')
@@ -7,18 +8,18 @@ ddb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
 events = boto3.client('events')
 
-status_table = ddb.Table('vmie_status')
+status_table = ddb.Table(os.environ('DYNAMO_TABLE'))
 event_info = []
 
 
 # Function to Disable Event to Trigger Check Status Lambda Function
 def disable_check():
     rule_status = events.describe_rule(
-        Name='vmie_status_check')
+        Name=os.environ('SCHEDULE_RULE'))
 
     if rule_status[u'State'] == 'ENABLED':
         events.disable_rule(
-            Name='vmie_status_check'
+            Name=os.environ('SCHEDULE_RULE')
         )
         print 'Status Check Disabled'
     else:
@@ -84,7 +85,7 @@ def send_notification():
     for items in ddb_tasks[u'Items']:
         if items[u'JobStatus'] in ('completed', 'deleted', 'deleting'):
             sns.publish(
-                TopicArn='arn:aws:sns:{}:{}:vmie_status'.format(event_info[1], event_info[0]),
+                TopicArn=os.environ['SNS_TOPIC_END'],
                 Message='''VM import task with Task ID of {} has ended with status of:\n{}
 This task was importing the following file:{}'''.format(items[u'ImportTaskId'], items[u'StatusMessage'], items[u'ObjectName']),
                 Subject='{} Ended'.format(items[u'ImportTaskId']),
