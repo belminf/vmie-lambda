@@ -209,11 +209,11 @@ Resources:
   LambdaImportOVA:
     Type: "AWS::Lambda::Function"
     Properties:
-      Handler: "import_ova.lambda_handler"
+      Handler: "lambda_code.handle_new_images"
       Role: !GetAtt IAMRoleLambda.Arn
       Code:
         S3Bucket: !Ref S3BucketLambda
-        S3Key: "import_ova.zip"
+        S3Key: "lambda_code.zip"
       Environment:
         Variables:
           DYNAMO_TABLE: !Ref TableVMIEStatus
@@ -227,7 +227,7 @@ Resources:
   LambdaCheckImport:
     Type: "AWS::Lambda::Function"
     Properties:
-      Handler: "check_import_status.lambda_handler"
+      Handler: "lambda_code.handle_task_scans"
       Role: !GetAtt IAMRoleLambda.Arn
       Code:
         S3Bucket: !Ref S3BucketLambda

@@ -13,11 +13,6 @@ parser.add_argument('stackname', metavar='STACK_NAME', help='CloudFormation stac
 parser.add_argument('email', metavar='EMAIL', help='e-mail address for notificaitons')
 args = parser.parse_args()
 
-LAMBDA_DEPLOYMENT_FILES = (
-    'lambda-code/import_ova.py',
-    'lambda-code/check_import_status.py',
-)
-
 # Load template
 template = Template(open('cfn-template.yaml.j2').read())
 
@@ -57,23 +52,17 @@ s3 = boto3.resource('s3')
 
 # Update zip files
 try:
-    for filename in LAMBDA_DEPLOYMENT_FILES:
 
-        # Filename used to name the zip file
-        base_fn = splitext(basename(filename))[0]
-        zip_fn = '{}.zip'.format(base_fn)
-        zip_path = path_join(tmpdir_path, zip_fn)
+    # Filename used to name the zip file
+    zip_fn = 'lambda_code.zip'
+    zip_path = path_join(tmpdir_path, zip_fn)
 
-        print('Compressing {}...'.format(zip_fn))
+    # Create zip file and add the python code
+    with ZipFile(zip_path, 'w') as zip_file:
+        zip_file.write('lambda_code.py')
 
-        # Create zip file and add the python code
-        with ZipFile(zip_path, 'w') as zip_file:
-            zip_file.write(filename)
-
-        print('Uploading {} to S3...'.format(zip_fn))
-
-        # Put on S3
-        s3.Bucket(bucket_name).put_object(Key=zip_fn, Body=open(zip_path))
+    # Put on S3
+    s3.Bucket(bucket_name).put_object(Key=zip_fn, Body=open(zip_path))
 
 finally:
 
