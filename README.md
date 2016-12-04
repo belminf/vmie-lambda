@@ -12,6 +12,11 @@ AWS credential via environment variables:
     $ export AWS_SECRET_ACCESS_KEY="ACCES_KEY_HERE"
 
 ## Files
-* `setup_vmie_lambda.py` - sets up necessary AWS resources
+* `setup_vmie_lambda.py` - creates and configures AWS resources
+* `lambda_code.py` - Lambda Python handlers
 * `cfn-template.yaml.j2` - CloudFormation template using Jinja2
-* `lambda-code/` - directory for Lambda function code
+
+## Example usage
+For documentation, view `./setup_vmie_lambda.py -h`. E.g.:
+
+    $ ./setup_vmie_lambda.py vmie-bucket belmin@example.com
